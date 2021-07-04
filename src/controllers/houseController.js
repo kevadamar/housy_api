@@ -1,10 +1,12 @@
 const { Houses, City } = require('../../models');
 const { houseSchema, editHouseSchema } = require('../utils/schema/houseSchema');
-const fs = require('fs')
+const fs = require('fs');
 const { pathImage } = require('../utils/config');
 
 exports.getHouses = async (req, res) => {
   try {
+    const { typeRent, price, bedroom, bathroom, amenities } = req.query;
+
     let resultHouses = await Houses.findAll({
       include: {
         model: City,
@@ -28,6 +30,18 @@ exports.getHouses = async (req, res) => {
             };
           })
         : [];
+
+    if (typeRent) {
+      resultHouses = resultHouses.filter(
+        (house) => house.typeRent === typeRent,
+      );
+    }
+
+    if (price) {
+      resultHouses = resultHouses.filter(
+        (house) => house.price <= parseInt(price),
+      );
+    }
 
     res.status(200).json({
       status: 200,
@@ -178,7 +192,7 @@ exports.deleteHouse = async (req, res) => {
       });
     }
 
-    const currentImage = `${pathImage}${resultHouse.image}`
+    const currentImage = `${pathImage}${resultHouse.image}`;
 
     if (fs.existsSync(currentImage)) {
       fs.unlinkSync(currentImage);
