@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const { User, Roles } = require('../../models');
 const { loginSchema, registerSchema } = require('../utils/schema/authSchema');
 
+//sign in
 exports.signin = async (req, res) => {
   try {
     const payload = req.body;
@@ -67,6 +68,7 @@ exports.signin = async (req, res) => {
   }
 };
 
+// sign up
 exports.signup = async (req, res) => {
   try {
     const data = req.body;
