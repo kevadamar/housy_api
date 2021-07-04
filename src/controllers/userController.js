@@ -1,6 +1,5 @@
 const bcrypt = require('bcrypt');
 const { User } = require('../../models');
-const { registerSchema } = require('../utils/schema/authSchema');
 
 exports.users = async (req, res) => {
   try {
@@ -16,7 +15,7 @@ exports.users = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res.status.json({
+    res.status(500).json({
       status: 500,
       message: 'Internal Server Error',
     });
@@ -39,7 +38,7 @@ exports.deleteUser = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res.status.json({
+    res.status(500).json({
       status: 500,
       message: 'Internal Server Error',
     });
