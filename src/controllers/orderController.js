@@ -1,38 +1,38 @@
-const { Houses, City } = require('../../models');
-const { houseSchema, editHouseSchema } = require('../utils/schema/houseSchema');
-const fs = require('fs')
+const { Order, Houses, City } = require('../../models');
 const { pathImage } = require('../utils/config');
+const {
+  createOrderSchema,
+  editOrderSchema,
+} = require('../utils/schema/orderSchema');
 
-exports.getHouses = async (req, res) => {
+const fs = require('fs');
+
+exports.getOrders = async (req, res) => {
   try {
-    let resultHouses = await Houses.findAll({
+    let resultOrders = await Order.findAll({
       include: {
-        model: City,
-        as: 'city',
+        model: Houses,
+        as: 'house',
         attributes: {
-          exclude: ['createdAt', 'updatedAt'],
+          exclude: ['createdAt', 'updatedAt', 'city_id'],
+        },
+        include: {
+          model: City,
+          as: 'city',
+          attributes: {
+            exclude: ['createdAt', 'updatedAt'],
+          },
         },
       },
       attributes: {
-        exclude: ['createdAt', 'updatedAt', 'city_id'],
+        exclude: ['createdAt', 'updatedAt', 'house_id'],
       },
     });
-
-    resultHouses =
-      resultHouses.length > 0
-        ? resultHouses.map((house) => {
-            return {
-              ...house.dataValues,
-              amenities: house.amenities.split(','),
-              image: `${process.env.IMAGE_PATH}${house.image}`,
-            };
-          })
-        : [];
 
     res.status(200).json({
       status: 200,
       message: 'Successfully',
-      data: resultHouses,
+      data: resultOrders,
     });
   } catch (error) {
     console.log(error);
@@ -43,42 +43,41 @@ exports.getHouses = async (req, res) => {
   }
 };
 
-exports.getHouse = async (req, res) => {
+exports.getOrder = async (req, res) => {
   try {
     const { id } = req.params;
-    let resultHouse = await Houses.findOne({
-      where: {
-        id,
-      },
+    const resultOrder = await Order.findOne({
+      where: { id },
       include: {
-        model: City,
-        as: 'city',
+        model: Houses,
+        as: 'house',
         attributes: {
-          exclude: ['createdAt', 'updatedAt'],
+          exclude: ['createdAt', 'updatedAt', 'city_id'],
+        },
+        include: {
+          model: City,
+          as: 'city',
+          attributes: {
+            exclude: ['createdAt', 'updatedAt'],
+          },
         },
       },
       attributes: {
-        exclude: ['createdAt', 'updatedAt', 'city_id'],
+        exclude: ['createdAt', 'updatedAt', 'house_id'],
       },
     });
 
-    if (!resultHouse) {
+    if (!resultOrder) {
       return res.status(404).json({
         status: 404,
-        message: 'House Not Found',
+        message: 'Order Not Found!',
       });
     }
 
-    resultHouse = {
-      ...resultHouse.dataValues,
-      amenities: resultHouse.amenities.split(','),
-      image: `${process.env.IMAGE_PATH}${resultHouse.image}`,
-    };
-
     res.status(200).json({
       status: 200,
       message: 'Successfully',
-      data: resultHouse,
+      data: resultOrder,
     });
   } catch (error) {
     console.log(error);
@@ -89,12 +88,11 @@ exports.getHouse = async (req, res) => {
   }
 };
 
-exports.createHouse = async (req, res) => {
+exports.createOrder = async (req, res) => {
   try {
     const payload = req.body;
-    console.log(payload);
 
-    const { error } = houseSchema.validate(payload);
+    const { error } = createOrderSchema.validate(payload);
 
     if (error) {
       return res.send({
@@ -103,9 +101,9 @@ exports.createHouse = async (req, res) => {
       });
     }
 
-    const resultCreated = await Houses.create({
+    const resultCreated = await Order.create({
       ...payload,
-      image: req.files.imageFile[0].filename,
+      attachment: req.files.imageFile[0].filename,
     });
 
     return res.status(201).json({
@@ -122,12 +120,12 @@ exports.createHouse = async (req, res) => {
   }
 };
 
-exports.editHouse = async (req, res) => {
+exports.editOrder = async (req, res) => {
   try {
-    const { id } = req.params;
     const payload = req.body;
+    const { id } = req.params;
 
-    const { error } = editHouseSchema.validate(payload);
+    const { error } = editOrderSchema.validate(payload);
 
     if (error) {
       return res.send({
@@ -143,13 +141,13 @@ exports.editHouse = async (req, res) => {
           image: req.files.imageFile[0].filename,
         };
 
-    await Houses.update(newPayload, {
+    await Order.update(newPayload, {
       where: {
         id,
       },
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       status: 200,
       message: 'successfully updated',
     });
@@ -162,31 +160,33 @@ exports.editHouse = async (req, res) => {
   }
 };
 
-exports.deleteHouse = async (req, res) => {
+exports.deleteOrder = async (req, res) => {
   try {
     const { id } = req.params;
-    const resultHouse = await Houses.findOne({
+
+    const resultOrder = await Order.findOne({
       where: {
         id,
       },
     });
-    const resultDelete = await Houses.destroy({ where: { id } });
+    const resultDelete = await Order.destroy({ where: { id } });
+
     if (!resultDelete) {
       return res.status(404).json({
         status: 404,
-        message: 'House not found',
+        message: 'Order Not Found!',
       });
     }
 
-    const currentImage = `${pathImage}${resultHouse.image}`
+    const currentImage = `${pathImage}${resultOrder.attachment}`;
 
     if (fs.existsSync(currentImage)) {
       fs.unlinkSync(currentImage);
     }
 
-    return res.status(200).json({
+    res.status(200).json({
       status: 200,
-      message: 'successfully deleted',
+      message: 'Successfully Deleted',
     });
   } catch (error) {
     console.log(error);
