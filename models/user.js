@@ -13,6 +13,21 @@ module.exports = (sequelize, DataTypes) => {
         as: 'listAs',
         foreignKey: 'role_id',
       });
+
+      User.hasMany(models.Houses, {
+        as: 'houses',
+        foreignKey: 'user_id',
+      });
+
+      User.hasMany(models.Order, {
+        as: 'orders',
+        foreignKey: 'user_id',
+      });
+
+      User.hasMany(models.Booking, {
+        as: 'booking',
+        foreignKey: 'user_id',
+      });
     }
   }
   User.init(
@@ -22,6 +37,9 @@ module.exports = (sequelize, DataTypes) => {
       email: DataTypes.STRING,
       password: DataTypes.STRING,
       gender: DataTypes.STRING,
+      image_profile: DataTypes.STRING,
+      phone_number: DataTypes.BIGINT,
+      address: DataTypes.TEXT
     },
     {
       sequelize,

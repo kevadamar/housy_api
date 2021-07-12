@@ -15,7 +15,10 @@ module.exports = {
         type: Sequelize.TEXT,
       },
       price: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.STRING,
+      },
+      description: {
+        type: Sequelize.TEXT,
       },
       typeRent: {
         type: Sequelize.STRING,
@@ -26,16 +29,35 @@ module.exports = {
       image: {
         type: Sequelize.STRING,
       },
+      imageFirst: {
+        type: Sequelize.STRING,
+      },
+      imageSecond: {
+        type: Sequelize.STRING,
+      },
+      imageThird: {
+        type: Sequelize.STRING,
+      },
       bedroom: {
         type: Sequelize.INTEGER,
       },
       bathroom: {
         type: Sequelize.INTEGER,
       },
+      area: {
+        type: Sequelize.INTEGER,
+      },
       city_id: {
         type: Sequelize.INTEGER,
         references: {
           model: 'cities',
+          key: 'id',
+        },
+      },
+      user_id: {
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'users',
           key: 'id',
         },
       },

@@ -9,6 +9,12 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+
+      Houses.belongsTo(models.User, {
+        as: 'owner',
+        foreignKey: 'user_id',
+      });
+
       Houses.belongsTo(models.City, {
         as: 'city',
         foreignKey: 'city_id',
@@ -18,18 +24,28 @@ module.exports = (sequelize, DataTypes) => {
         as: 'orders',
         foreignKey: 'house_id',
       });
+
+      Houses.hasMany(models.Booking, {
+        as: 'booking',
+        foreignKey: 'house_id',
+      });
     }
   }
   Houses.init(
     {
       name: DataTypes.STRING,
       address: DataTypes.TEXT,
-      price: DataTypes.INTEGER,
+      price: DataTypes.STRING,
+      description: DataTypes.TEXT,
       typeRent: DataTypes.STRING,
       amenities: DataTypes.STRING,
       image: DataTypes.STRING,
+      imageFirst: DataTypes.STRING,
+      imageSecond: DataTypes.STRING,
+      imageThird: DataTypes.STRING,
       bedroom: DataTypes.INTEGER,
       bathroom: DataTypes.INTEGER,
+      area: DataTypes.INTEGER,
     },
     {
       sequelize,

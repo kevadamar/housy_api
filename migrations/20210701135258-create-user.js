@@ -30,6 +30,15 @@ module.exports = {
       gender: {
         type: Sequelize.ENUM('male', 'female'),
       },
+      image_profile: {
+        type: Sequelize.STRING,
+      },
+      phone_number: {
+        type: Sequelize.BIGINT,
+      },
+      address: {
+        type: Sequelize.TEXT,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

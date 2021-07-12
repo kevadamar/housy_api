@@ -7,9 +7,11 @@ exports.registerSchema = joi.object({
   password: joi.string().min(8).required(),
   role_id: joi.number().required(),
   gender: joi.string().required(),
+  phone_number: joi.string().max(20).required(),
+  address: joi.string().required(),
 });
 
 exports.loginSchema = joi.object({
   username: joi.string().required(),
-  password: joi.string().required(),
+  password: joi.string().min(8).required(),
 });

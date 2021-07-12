@@ -6,7 +6,7 @@ exports.auth = (req, res, next) => {
 
     if (!header) {
       return res.status(401).send({
-        status: 'failed',
+        status: 401,
         message: 'Unauthenticated!',
       });
     }
@@ -18,7 +18,7 @@ exports.auth = (req, res, next) => {
     const verified = jwt.verify(token, secretKey, (error, decoded) => {
       if (error) {
         return res.status(401).send({
-          status: 'failed',
+          status: 401,
           message: 'Invalid Credentials!',
         });
       } else {
@@ -26,14 +26,33 @@ exports.auth = (req, res, next) => {
       }
     });
 
-    req.idUser = verified.id;
-    req.roleUser = verified.role
+    req.user = verified;
 
     next();
   } catch (error) {
     console.log(error);
     res.status(500).send({
-      status: 'failed',
+      status: 500,
+      message: 'Internal Server Error',
+    });
+  }
+};
+
+exports.ownerAccess = (req, res, next) => {
+  try {
+    console.log(req.user);
+    if (req.user.role !== 'owner') {
+      return res.status(403).send({
+        status: 403,
+        message: 'Access Denied!',
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      status: 500,
       message: 'Internal Server Error',
     });
   }
