@@ -12,11 +12,24 @@ exports.getOrders = async (req, res) => {
   try {
     const { page } = req.query;
 
-    const limit =page === undefined ? 20 : 5;
+    const limit = page === undefined ? 20 : 5;
     const offset = page === undefined ? 0 : (page - 1) * limit;
 
-    let resultOrders;
+    let resultOrders, countData;
     if (req.user.role === 'owner') {
+      countData = await Order.findAll({
+        where: {
+          '$house.user_id$': req.user.id,
+        },
+        include: [
+          {
+            model: Houses,
+            as: 'house',
+            attributes: ['id'],
+          },
+        ],
+        attributes: ['id'],
+      });
       resultOrders = await Order.findAll({
         where: {
           '$house.user_id$': req.user.id,
@@ -90,6 +103,12 @@ exports.getOrders = async (req, res) => {
       });
       console.log('owner');
     } else {
+      countData = await Order.findAll({
+        where: {
+          user_id: req.user.id,
+        },
+        attributes: ['id'],
+      });
       resultOrders = await Order.findAll({
         where: {
           user_id: req.user.id,
@@ -161,6 +180,7 @@ exports.getOrders = async (req, res) => {
       });
       console.log('tenant');
     }
+    countData = JSON.parse(JSON.stringify(countData)).length;
     resultOrders = JSON.parse(JSON.stringify(resultOrders));
     resultOrders =
       resultOrders.length > 0
@@ -181,7 +201,7 @@ exports.getOrders = async (req, res) => {
     res.status(200).json({
       status: 200,
       message: 'Successfully',
-      countData: resultOrders.length,
+      countData: countData,
       data: resultOrders,
     });
   } catch (error) {
@@ -509,6 +529,55 @@ exports.deleteOrder = async (req, res) => {
     if (fs.existsSync(currentImage)) {
       fs.unlinkSync(currentImage);
     }
+
+    res.status(200).json({
+      status: 200,
+      message: 'Successfully Deleted',
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: 500,
+      message: 'Internal Server Error',
+    });
+  }
+};
+
+exports.bulkDeleteOrder = async (req, res) => {
+  try {
+    const { house_id } = req.params;
+
+    let resultOrder = await Order.findAll({
+      where: {
+        house_id,
+      },
+    });
+    await Order.sequelize.query('SET FOREIGN_KEY_CHECKS = 0', null, {
+      raw: true,
+    });
+
+    const resultDelete = await Order.destroy({
+      where: {
+        house_id,
+      },
+    });
+
+    if (!resultDelete) {
+      return res.status(404).json({
+        status: 404,
+        message: 'Order Not Found!',
+      });
+    }
+
+    resultOrder = JSON.parse(JSON.stringify(resultOrder));
+
+    resultOrder.map((order) => {
+      const currentImage = `${pathImage}${order.attachment}`;
+
+      if (fs.existsSync(currentImage)) {
+        fs.unlinkSync(currentImage);
+      }
+    });
 
     res.status(200).json({
       status: 200,

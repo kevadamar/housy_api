@@ -3,6 +3,95 @@ const { houseSchema, editHouseSchema } = require('../utils/schema/houseSchema');
 const fs = require('fs');
 const { pathImage } = require('../utils/config');
 
+exports.getHousesByOwner = async (req, res) => {
+  try {
+    const { page } = req.query;
+
+    const limit = page === undefined ? 20 : 5;
+    const offset = page === undefined ? 0 : (page - 1) * limit;
+
+    let countData = await Houses.findAll({
+      where: {
+        user_id: req.user.id,
+      },
+      attributes: ['id'],
+    });
+    let resultHouses = await Houses.findAll({
+      where: {
+        user_id: req.user.id,
+      },
+      include: [
+        {
+          model: City,
+          required: true,
+          as: 'city',
+          attributes: {
+            exclude: ['createdAt', 'updatedAt'],
+          },
+        },
+        {
+          model: User,
+          required: true,
+          as: 'owner',
+          attributes: {
+            exclude: ['createdAt', 'updatedAt', 'role_id', 'password'],
+          },
+          include: {
+            model: Roles,
+            required: true,
+            as: 'listAs',
+            attributes: {
+              exclude: ['createdAt', 'updatedAt'],
+            },
+          },
+        },
+      ],
+      attributes: {
+        exclude: ['createdAt', 'updatedAt', 'city_id', 'user_id'],
+      },
+      offset,
+      limit,
+      order: [['updatedAt', 'DESC']],
+    });
+
+    countData = JSON.parse(JSON.stringify(countData)).length;
+    resultHouses = JSON.parse(JSON.stringify(resultHouses));
+
+    resultHouses =
+      resultHouses.length > 0
+        ? resultHouses.map((house) => {
+            return {
+              ...house,
+              amenities: house.amenities.split(','),
+              image: `${process.env.IMAGE_PATH}${house.image}`,
+              imageFirst: !house.imageFirst
+                ? null
+                : `${process.env.IMAGE_PATH}${house.imageFirst}`,
+              imageSecond: !house.imageSecond
+                ? null
+                : `${process.env.IMAGE_PATH}${house.imageSecond}`,
+              imageThird: !house.imageThird
+                ? null
+                : `${process.env.IMAGE_PATH}${house.imageThird}`,
+            };
+          })
+        : [];
+
+    res.status(200).json({
+      status: 200,
+      message: 'Successfully',
+      countData: countData,
+      data: resultHouses,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: 500,
+      message: 'Internal Server Error',
+    });
+  }
+};
+
 exports.getHouses = async (req, res) => {
   try {
     const { typeRent, price, bedroom, bathroom, amenities, city } = req.query;
@@ -329,10 +418,25 @@ exports.deleteHouse = async (req, res) => {
       });
     }
 
-    const currentImage = `${pathImage}${resultHouse.image}`;
+    const firstImage = `${pathImage}${resultHouse.image}`;
+    const secondImage = `${pathImage}${resultHouse.imageFirst}`;
+    const thirdImage = `${pathImage}${resultHouse.imageSecond}`;
+    const fourthImage = `${pathImage}${resultHouse.imageThird}`;
 
-    if (fs.existsSync(currentImage)) {
-      fs.unlinkSync(currentImage);
+    if (fs.existsSync(firstImage)) {
+      fs.unlinkSync(firstImage);
+    }
+
+    if (fs.existsSync(secondImage)) {
+      fs.unlinkSync(secondImage);
+    }
+
+    if (fs.existsSync(thirdImage)) {
+      fs.unlinkSync(thirdImage);
+    }
+
+    if (fs.existsSync(fourthImage)) {
+      fs.unlinkSync(fourthImage);
     }
 
     return res.status(200).json({

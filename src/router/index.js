@@ -15,6 +15,7 @@ const {
   createHouse,
   deleteHouse,
   editHouse,
+  getHousesByOwner,
 } = require('../controllers/houseController');
 const {
   getOrders,
@@ -23,6 +24,7 @@ const {
   createOrder,
   editOrder,
   updateStatusOrder,
+  bulkDeleteOrder,
 } = require('../controllers/orderController');
 const { getRoles, createRole } = require('../controllers/roleController');
 const {
@@ -64,6 +66,8 @@ router.patch(
   editHouse,
 );
 router.delete('/house/:id', auth, ownerAccess, deleteHouse);
+// houses by owner
+router.get('/owner/houses', auth, ownerAccess, getHousesByOwner);
 
 // orders / transaction
 router.get('/orders', auth, getOrders);
@@ -72,6 +76,7 @@ router.post('/order', auth, uploadFile('imageFile'), createOrder);
 router.patch('/order/:id', auth, uploadFile('imageFile'), editOrder);
 router.patch('/order/:id/status', auth, ownerAccess, updateStatusOrder);
 router.delete('/order/:id', auth, ownerAccess, deleteOrder);
+router.delete('/orders/:house_id', auth, ownerAccess, bulkDeleteOrder);
 
 // booking
 router.get('/bookings', auth, getBookings);
