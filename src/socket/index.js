@@ -1,24 +1,43 @@
-const jwt = require('jsonwebtoken');
-const { Order, Houses } = require('../../models');
+const { Order, Houses, User } = require('../../models');
 
-const getOrders = async (id) => {
+const getOrders = async (data, type) => {
   try {
-    let messages = await Order.findAll({
-      where: {
-        '$house.user_id$': id,
+    let obj = {
+      '$house.user_id$': data,
+      status: 2,
+    };
+    if (type === 'email')
+      obj = {
+        '$house.owner.email$': data,
         status: 2,
-      },
+      };
+
+    let messages = await Order.findAll({
+      where: obj,
       include: [
         {
           model: Houses,
           as: 'house',
           attributes: ['name'],
+          include: [
+            {
+              model: User,
+              as: 'owner',
+              attributes: ['email', 'username'],
+            },
+          ],
+        },
+        {
+          model: User,
+          as: 'user',
+          attributes: ['username'],
         },
       ],
       attributes: ['id', 'status'],
+      order: [['id', 'DESC']],
     });
     messages = JSON.parse(JSON.stringify(messages));
-    console.log(messages.length, 'length notif');
+    console.log(messages.length, 'length notif', type);
     return messages;
   } catch (error) {
     console.log(error);
@@ -27,38 +46,49 @@ const getOrders = async (id) => {
 
 module.exports.socketIo = (io) => {
   io.on('connection', async (socket) => {
-    const { token } = socket;
+    try {
+      const { token } = socket;
+      const email = socket.email;
 
-    if (!token) {
-      throw new Error('not authorized');
-    }
-    const secretKey = process.env.SECRET_KEY;
-
-    const verifiedJWT = jwt.verify(token, secretKey, (error, decoded) => {
-      if (error) {
-        throw new Error('Invalid Credentials!');
-      } else {
-        return decoded;
+      if (!token) {
+        throw new Error('not authorized');
       }
-    });
 
-    socket.on('load-notification', async (data) => {
-      console.log('msg = ', data);
-      io.emit('new-notifications', await getOrders(verifiedJWT.id));
-    });
+      if (!email) {
+        throw new Error('not authorized email');
+      }
 
-    socket.on('send-notification', async (data) => {
-      const resultOrders = await getOrders(data);
-      console.log('msg send = ', data);
-      io.emit('new-notifications', resultOrders);
-    });
+      socket.join(`user_${email}`);
 
-    socket.on('disconnect', () => {
-      console.log('disconnect');
-      socket.disconnect();
-    });
+      // console.log(email, 'nauk');
+      socket.on('load-notification', async (data) => {
+        console.log('load = ', data);
+
+        io.to(`user_${data}`).emit(
+          'new-notifications',
+          await getOrders(data, 'email'),
+        );
+      });
+
+      socket.on('send-notification', async (data) => {
+        const { ownerId, email } = data;
+        const resultOrders = await getOrders(ownerId, 'id');
+        console.log('msg send = ', data);
+        io.to(`user_${email}`).emit('new-notifications', resultOrders);
+      });
+
+      socket.on('disconnect', () => {
+        console.log('disconnect');
+        socket.disconnect();
+      });
+    } catch (error) {
+      throw new Error(error);
+    }
   });
+
   io.use((socket, next) => {
+    socket.email = socket.handshake.query.email;
+
     if (socket.handshake.query.token) {
       const token = socket.handshake.query.token;
       socket.token = token;

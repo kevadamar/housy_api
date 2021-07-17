@@ -91,7 +91,11 @@ exports.signin = async (req, res) => {
       });
     }
     const token = jwt.sign(
-      { id: resultUser.id, role: resultUser.listAs.name },
+      {
+        id: resultUser.id,
+        role: resultUser.listAs.name,
+        email: resultUser.email,
+      },
       process.env.SECRET_KEY,
     );
 

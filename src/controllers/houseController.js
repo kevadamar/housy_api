@@ -8,12 +8,14 @@ exports.getHousesByOwner = async (req, res) => {
     const { page } = req.query;
 
     const limit = page === undefined ? 20 : 5;
+    const maxLimit = 50;
     const offset = page === undefined ? 0 : (page - 1) * limit;
 
     let countData = await Houses.findAll({
       where: {
         user_id: req.user.id,
       },
+      limit: maxLimit,
       attributes: ['id'],
     });
     let resultHouses = await Houses.findAll({
