@@ -2,6 +2,8 @@ const { Order, Houses, User } = require('../../models');
 
 const getOrders = async (data, type) => {
   try {
+    const maxLimit = 20;
+
     let obj = {
       '$house.user_id$': data,
       status: 2,
@@ -33,6 +35,7 @@ const getOrders = async (data, type) => {
           attributes: ['username'],
         },
       ],
+      limit: maxLimit,
       attributes: ['id', 'status'],
       order: [['id', 'DESC']],
     });

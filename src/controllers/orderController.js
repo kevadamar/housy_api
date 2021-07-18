@@ -105,13 +105,13 @@ exports.getOrders = async (req, res) => {
       });
       console.log('owner');
     } else {
-      countData = await Order.findAll({
-        where: {
-          user_id: req.user.id,
-        },
-        limit: maxLimit,
-        attributes: ['id'],
-      });
+      // countData = await Order.findAll({
+      //   where: {
+      //     user_id: req.user.id,
+      //   },
+      //   limit: maxLimit,
+      //   attributes: ['id'],
+      // });
       resultOrders = await Order.findAll({
         where: {
           user_id: req.user.id,
@@ -179,11 +179,12 @@ exports.getOrders = async (req, res) => {
         attributes: {
           exclude: ['updatedAt', 'house_id', 'user_id'],
         },
+        limit,
         order: [['createdAt', 'DESC']],
       });
       console.log('tenant');
     }
-    countData = JSON.parse(JSON.stringify(countData)).length;
+
     resultOrders = JSON.parse(JSON.stringify(resultOrders));
     resultOrders =
       resultOrders.length > 0
@@ -204,7 +205,7 @@ exports.getOrders = async (req, res) => {
     res.status(200).json({
       status: 200,
       message: 'Successfully',
-      countData: countData,
+      countData: resultOrders.length,
       data: resultOrders,
     });
   } catch (error) {

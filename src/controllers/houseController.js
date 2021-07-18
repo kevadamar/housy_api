@@ -178,9 +178,15 @@ exports.getHouses = async (req, res) => {
     }
 
     if (amenities) {
-      resultHouses = resultHouses.filter((house) =>
-        house.amenities.includes(amenities),
-      );
+      const newAmenities = amenities.split(',');
+
+      resultHouses = resultHouses.filter((house) => {
+        return (
+          house.amenities.includes(newAmenities[0]) ||
+          house.amenities.includes(newAmenities[1]) ||
+          house.amenities.includes(newAmenities[2])
+        );
+      });
     }
 
     if (city) {
