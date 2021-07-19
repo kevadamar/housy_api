@@ -32,7 +32,7 @@ const getOrders = async (data, type) => {
         {
           model: User,
           as: 'user',
-          attributes: ['username'],
+          attributes: ['username', 'fullname'],
         },
       ],
       limit: maxLimit,

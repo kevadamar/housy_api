@@ -5,17 +5,27 @@ exports.cities = async (req, res) => {
   try {
     const { q } = req.query;
 
-    let resultCities;
+    let resultCities,
+      countData = 0;
     if (!q) {
-      resultCities = await City.findAll();
+      const { count, rows } = await City.findAndCountAll({
+        attributes: ['id', 'name'],
+      });
+
+      resultCities = rows;
+      countData = count;
     } else {
-      resultCities = await City.findAll({
+      const { count, rows } = await City.findAndCountAll({
         where: {
           name: {
             [Op.substring]: q,
           },
         },
+        attributes: ['id', 'name'],
       });
+
+      resultCities = rows;
+      countData = count;
     }
     return res.status(200).json({
       status: 200,

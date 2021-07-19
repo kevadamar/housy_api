@@ -105,13 +105,13 @@ exports.getOrders = async (req, res) => {
       });
       console.log('owner');
     } else {
-      // countData = await Order.findAll({
-      //   where: {
-      //     user_id: req.user.id,
-      //   },
-      //   limit: maxLimit,
-      //   attributes: ['id'],
-      // });
+      countData = await Order.findAll({
+        where: {
+          user_id: req.user.id,
+        },
+        limit: maxLimit,
+        attributes: ['id'],
+      });
       resultOrders = await Order.findAll({
         where: {
           user_id: req.user.id,
@@ -184,6 +184,8 @@ exports.getOrders = async (req, res) => {
       });
       console.log('tenant');
     }
+    
+    countData = JSON.parse(JSON.stringify(countData)).length;
 
     resultOrders = JSON.parse(JSON.stringify(resultOrders));
     resultOrders =
@@ -205,7 +207,7 @@ exports.getOrders = async (req, res) => {
     res.status(200).json({
       status: 200,
       message: 'Successfully',
-      countData: resultOrders.length,
+      countData: countData,
       data: resultOrders,
     });
   } catch (error) {
